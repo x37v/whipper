@@ -29,7 +29,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     sox \
     swig \
     cdrdao \ 
-    cdparanoia
+    cdparanoia \ 
+    cd-paranoia
 #RUN pip3 --no-cache-dir install --user pycdio==2.1.0 discid
 RUN apt-get install python3-cdio
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
