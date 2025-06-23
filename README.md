@@ -90,9 +90,9 @@ It's recommended to create an alias for a convenient usage:
 
 ```bash
 alias whipper="docker run -ti --rm --device=/dev/cdrom \
-    --mount type=bind,source=${HOME}/.config/whipper,target=/home/worker/.config/whipper \
+    --mount type=bind,source=${HOME}/.config/whipper,target=/home/ubuntu/.config/whipper \
     --mount type=bind,source=${PWD}/output,target=/output \
-    whipperteam/whipper"
+    xnor/whipper"
 ```
 
 You should put this e.g. into your `.bash_aliases`. Also keep in mind to replace the path definitions to something that fits to your needs (e.g. replace `… -v ${PWD}/output:/output …` with `… -v ${HOME}/ripped:/output \ …`).

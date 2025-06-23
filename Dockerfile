@@ -1,4 +1,5 @@
-FROM debian:buster
+#latest LTS
+FROM ubuntu:noble
 ARG optical_gid
 ARG uid=1000
 
@@ -27,39 +28,47 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     python3-setuptools \
     sox \
     swig \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && pip3 --no-cache-dir install pycdio==2.1.0 discid
+    cdrdao \ 
+    cdparanoia
+#RUN pip3 --no-cache-dir install --user pycdio==2.1.0 discid
+RUN apt-get install python3-cdio
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # libcdio-paranoia / libcdio-utils are wrongfully packaged in Debian, thus built manually
 # see https://github.com/whipper-team/whipper/pull/237#issuecomment-367985625
-ENV LIBCDIO_VERSION 2.1.0
-RUN curl -o - "https://ftp.gnu.org/gnu/libcdio/libcdio-${LIBCDIO_VERSION}.tar.bz2" | tar jxf - \
-    && cd libcdio-${LIBCDIO_VERSION} \
-    && autoreconf -fi \
-    && ./configure --disable-dependency-tracking --disable-cxx --disable-example-progs --disable-static \
-    && make install \
-    && cd .. \
-    && rm -rf libcdio-${LIBCDIO_VERSION}
-
-# Install cd-paranoia from tarball
-ENV LIBCDIO_PARANOIA_VERSION 10.2+2.0.1
-RUN curl -o - "https://ftp.gnu.org/gnu/libcdio/libcdio-paranoia-${LIBCDIO_PARANOIA_VERSION}.tar.bz2" | tar jxf - \
-    && cd libcdio-paranoia-${LIBCDIO_PARANOIA_VERSION} \
-    && autoreconf -fi \
-    && ./configure --disable-dependency-tracking --disable-example-progs --disable-static \
-    && make install \
-    && cd .. \
-    && rm -rf libcdio-paranoia-${LIBCDIO_PARANOIA_VERSION}
-
-RUN ldconfig
+#ENV LIBCDIO_VERSION 2.1.0
+#RUN curl -o - "https://ftp.gnu.org/gnu/libcdio/libcdio-${LIBCDIO_VERSION}.tar.bz2" | tar jxf - \
+#    && cd libcdio-${LIBCDIO_VERSION} \
+#    && autoreconf -fi \
+#    && ./configure --disable-dependency-tracking --disable-cxx --disable-example-progs --disable-static \
+#    && make install \
+#    && cd .. \
+#    && rm -rf libcdio-${LIBCDIO_VERSION}
+#
+## Install cd-paranoia from tarball
+#ENV LIBCDIO_PARANOIA_VERSION 10.2+2.0.1
+#RUN curl -o - "https://ftp.gnu.org/gnu/libcdio/libcdio-paranoia-${LIBCDIO_PARANOIA_VERSION}.tar.bz2" | tar jxf - \
+#    && cd libcdio-paranoia-${LIBCDIO_PARANOIA_VERSION} \
+#    && autoreconf -fi \
+#    && ./configure --disable-dependency-tracking --disable-example-progs --disable-static \
+#    && make install \
+#    && cd .. \
+#    && rm -rf libcdio-paranoia-${LIBCDIO_PARANOIA_VERSION}
+#
+#RUN ldconfig
 
 # add user (+ group workaround for ArchLinux)
-RUN useradd -m worker --uid ${uid} -G cdrom \
-    && if [ -n "${optical_gid}" ]; then groupadd -f -g "${optical_gid}" optical \
-    && usermod -a -G optical worker; fi \
-    && mkdir -p /output /home/worker/.config/whipper \
-    && chown worker: /output /home/worker/.config/whipper
-VOLUME ["/home/worker/.config/whipper", "/output"]
+RUN usermod -a -G cdrom ubuntu
+RUN if [ -n "${optical_gid}" ]; then groupadd -f -g "${optical_gid}" optical \
+    && usermod -a -G optical ubuntu; fi \
+    && mkdir -p /output /home/ubuntu/.config/whipper \
+    && chown ubuntu: /output /home/ubuntu/.config/whipper
+VOLUME ["/home/ubuntu/.config/whipper", "/output"]
+
+USER ubuntu
+RUN pip3 install --user --break-system-packages discid
+
+USER root
 
 # setup locales + cleanup
 RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment \
@@ -79,6 +88,7 @@ ENV LANG=en_US
 ENV LANGUAGE=en_US.UTF-8
 ENV PYTHONIOENCODING=utf-8
 
-USER worker
+
+USER ubuntu
 WORKDIR /output
 ENTRYPOINT ["whipper"]
